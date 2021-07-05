@@ -1,11 +1,17 @@
+const e = require('express');
 var fs = require('fs');
 var sqlite3 = require('sqlite3').verbose();
 
-var db = new sqlite3.Database("./data2.db");
+var db = new sqlite3.Database("./data.db");
 db.run("CREATE TABLE IF NOT EXISTS iot ('id' integer  PRIMARY KEY AUTOINCREMENT, 'time' varchar,'mac' varchar, 'temp' varchar,'hum' varchar );", function (err, data) {
     if (err) {
         console.log(err);
-    }
+    } else console.log("iot table create success!!");
+});
+db.run("CREATE TABLE IF NOT EXISTS iot_note ('id' integer  PRIMARY KEY AUTOINCREMENT,'mac' varchar, 'note' varchar);", function (err, data) {
+    if (err) {
+        console.log(err);
+    } else console.log("iot_note table create success!!");
 });
 function getLast(res) {
     var sql = "SELECT max(id) id,time,mac,temp,hum from iot group by mac;";
@@ -38,10 +44,11 @@ function insert(res, time, mac, temp, hum) {
         });
     });
 }
-function deleteALl(res) {
-    var sql = `delete from  iot;`;
+function deleteALl(res,mac) {
+    var sql = `delete from  iot where mac=?;`;
+    var value = [mac]
     db.serialize(function () {
-        db.run(sql, function (err) {
+        db.run(sql, value, function (err) {
             if (err) {
                 console.error(err);
                 res.status(500).send(err);
@@ -59,7 +66,7 @@ function all(res, startTime, endTime) {
         db.all(sql, values, function (err, rows) {
             if (err) {
                 console.error(err);
-                res.status(500).send(err);
+                res.status(200).send(err);
             } else {
                 res.setHeader("Access-Control-Allow-Origin", "*");
                 res.json(rows);
