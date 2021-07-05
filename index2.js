@@ -1,5 +1,6 @@
 var sqlite = require('./sqlite.js');
 var express = require('express');
+var querystring = require('querystring');
 var app = express();
 
 app.all('*', function (req, res, next) {
@@ -19,23 +20,35 @@ function isEmptyStr(s) {
 }
 app.get("/", (req, res) => sqlite.getLast(res));
 app.post('/list', (req, res) => {
-    var start = req.query.start;
-    var stop = req.query.stop;
-    if (isEmptyStr(start) || isEmptyStr(stop)) {
-        start = new Date(new Date(new Date().toLocaleDateString()).getTime()).getTime();
-        stop = new Date(new Date(new Date().toLocaleDateString()).getTime() + 24 * 60 * 60 * 1000 - 1).getTime();
-        console.log('start or stop undefined...')
-    }
-    sqlite.all(res, start, stop);
+    req.addListener('data', function (data) {
+        var start = querystring.parse('' + data).start;
+        var stop = querystring.parse('' + data).stop;
+        console.log("start:", start,stop);
+        if (isEmptyStr(start) || isEmptyStr(stop)) {
+            start = new Date(new Date(new Date().toLocaleDateString()).getTime()).getTime();
+            stop = new Date(new Date(new Date().toLocaleDateString()).getTime() + 24 * 60 * 60 * 1000 - 1).getTime();
+            console.log('start or stop undefined...')
+        }
+        sqlite.all(res, start, stop);
+    });
 });
-app.get('/clear', (req, res) => sqlite.deleteALl(res));
+app.get('/clear', (req, res) => {
+    req.addListener('data', function (data) {
+        var mac = querystring.parse('' + data).mac;
+        console.log("mac:", mac);
+        if (!isEmptyStr(mac)) sqlite.deleteALl(res, mac);
+        else res.send(`clear nothing`);
+    });
+});
 app.post('/insert', (req, res) => {
-    var mac = req.query.mac;
-    var temp = req.query.temp;
-    var hum = req.query.hum;
-    console.log(mac, temp,hum);
-    if (!isEmptyStr(mac) && !isEmptyStr(temp) && !isEmptyStr(hum)) sqlite.insert(res,Math.floor(Date.now()), mac, temp,hum)
-    else res.status(500).end(`param error`);
+    req.addListener('data', function (data) {
+        var mac = querystring.parse('' + data).mac;
+        var temp = querystring.parse('' + data).temp;
+        var hum = querystring.parse('' + data).hum;
+        console.log(mac, temp, hum);
+        if (!isEmptyStr(mac) && !isEmptyStr(temp) && !isEmptyStr(hum)) sqlite.insert(res, Math.floor(Date.now()), mac, temp, hum)
+        else res.status(200).end(`param error`);
+    });
 });
 
 var server = app.listen(3001, function () {
