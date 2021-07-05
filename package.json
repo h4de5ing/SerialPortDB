@@ -4,15 +4,15 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "better-sqlite3": "^7.4.1",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "sqlite3": "^5.0.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.9"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "start": "nodemon index2.js"
   },
   "keywords": [],
   "author": "",
